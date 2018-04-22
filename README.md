@@ -4,9 +4,15 @@ Monitoring kubenetes cluster and showing pods/containers status
 
 Fork from client-go [workqueue example](https://github.com/kubernetes/client-go/tree/master/examples/workqueue)
 
-# Usage
+## Install
 
 ```shell
+go get -u github.com/John-Lin/kubewatch
+```
+
+## Usage
+
+```
 kubewatch -h
 Usage of kubewatch:
   -all-namespaces
