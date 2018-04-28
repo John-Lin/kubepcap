@@ -1,24 +1,28 @@
-# kubewatch
+# kubepcap
 
-Monitoring kubenetes cluster and showing pods/containers status
+Kubernetes pod capture.
+
+Monitoring kubenetes cluster and showing pods/containers status with field selector.
 
 Fork from client-go [workqueue example](https://github.com/kubernetes/client-go/tree/master/examples/workqueue)
 
 ## Install
 
 ```shell
-go get -u github.com/John-Lin/kubewatch
+go get -u github.com/John-Lin/kubepcap
 ```
 
 ## Usage
 
 ```
-kubewatch -h
-Usage of kubewatch:
+kubepcap -h
+Usage of kubepcap:
   -all-namespaces
         all namespaces
   -alsologtostderr
         log to standard error as well as files
+  -field-selector string
+        field selector
   -kubeconfig string
         absolute path to the kubeconfig file (default "/Users/johnlin/.kube/config")
   -log_backtrace_at value
