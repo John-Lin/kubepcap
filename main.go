@@ -139,6 +139,7 @@ func (c *Controller) runWorker() {
 
 func main() {
 	var kubeconfig string
+	var fieldSelector string
 	var master string
 	var allNamespaces bool
 
@@ -152,6 +153,7 @@ func main() {
 	flag.StringVar(&kubeconfig, "kubeconfig", kubeconfigDefaultPath, "absolute path to the kubeconfig file")
 	flag.StringVar(&master, "master", "", "master url")
 	flag.BoolVar(&allNamespaces, "all-namespaces", false, "all namespaces")
+	flag.StringVar(&fieldSelector, "field-selector", "", "field selector")
 	flag.Parse()
 
 	// creates the connection
@@ -166,11 +168,19 @@ func main() {
 		glog.Fatal(err)
 	}
 
+	selector := fields.ParseSelectorOrDie(fieldSelector)
+
 	// create the pod watcher
 	podListWatcher := cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", v1.NamespaceDefault, fields.Everything())
+	if len(fieldSelector) != 0 {
+		podListWatcher = cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", v1.NamespaceDefault, selector)
+	}
 
 	if allNamespaces {
 		podListWatcher = cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", v1.NamespaceAll, fields.Everything())
+		if len(fieldSelector) != 0 {
+			podListWatcher = cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", v1.NamespaceAll, selector)
+		}
 	}
 
 	// create the workqueue
