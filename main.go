@@ -10,7 +10,6 @@ import (
 	"github.com/golang/glog"
 
 	"k8s.io/api/core/v1"
-	// meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -141,6 +140,7 @@ func main() {
 	var kubeconfig string
 	var fieldSelector string
 	var master string
+	var namespace string
 	var allNamespaces bool
 
 	usr, err := user.Current()
@@ -151,9 +151,10 @@ func main() {
 	kubeconfigDefaultPath := filepath.Join(usr.HomeDir, "/.kube/config")
 
 	flag.StringVar(&kubeconfig, "kubeconfig", kubeconfigDefaultPath, "absolute path to the kubeconfig file")
+	flag.StringVar(&namespace, "namespace", "default", "If present, the namespace scope for this CLI request")
 	flag.StringVar(&master, "master", "", "master url")
-	flag.BoolVar(&allNamespaces, "all-namespaces", false, "All namespaces in cluster")
 	flag.StringVar(&fieldSelector, "field-selector", "", "Selector (field query) to filter on, supports '=', '==', and '!='.(e.g. --field-selector key1=value1,key2=value2).")
+	flag.BoolVar(&allNamespaces, "all-namespaces", false, "All namespaces in cluster")
 	flag.Parse()
 
 	// creates the connection
@@ -168,20 +169,27 @@ func main() {
 		glog.Fatal(err)
 	}
 
-	selector := fields.ParseSelectorOrDie(fieldSelector)
+	var sel fields.Selector
+	var ns string
 
-	// create the pod watcher
-	podListWatcher := cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", v1.NamespaceDefault, fields.Everything())
 	if len(fieldSelector) != 0 {
-		podListWatcher = cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", v1.NamespaceDefault, selector)
+		sel = fields.ParseSelectorOrDie(fieldSelector)
+	} else {
+		sel = fields.Everything()
 	}
 
 	if allNamespaces {
-		podListWatcher = cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", v1.NamespaceAll, fields.Everything())
-		if len(fieldSelector) != 0 {
-			podListWatcher = cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", v1.NamespaceAll, selector)
+		ns = v1.NamespaceAll
+	} else {
+		if len(namespace) != 0 {
+			ns = namespace
+		} else {
+			ns = v1.NamespaceDefault
 		}
 	}
+
+	// create the pod watcher
+	podListWatcher := cache.NewListWatchFromClient(clientset.CoreV1().RESTClient(), "pods", ns, sel)
 
 	// create the workqueue
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
@@ -217,17 +225,6 @@ func main() {
 	}, cache.Indexers{})
 
 	controller := NewController(queue, indexer, informer)
-
-	// We can now warm up the cache for initial synchronization.
-	// Let's suppose that we knew about a pod "mypod" on our last run, therefore add it to the cache.
-	// If this pod is not there anymore, the controller will be notified about the removal after the
-	// cache has synchronized.
-	// indexer.Add(&v1.Pod{
-	// 	ObjectMeta: meta_v1.ObjectMeta{
-	// 		Name:      "busybox-sleep-less",
-	// 		Namespace: v1.NamespaceDefault,
-	// 	},
-	// })
 
 	// Now let's start the controller
 	stop := make(chan struct{})
