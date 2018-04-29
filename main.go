@@ -152,8 +152,8 @@ func main() {
 
 	flag.StringVar(&kubeconfig, "kubeconfig", kubeconfigDefaultPath, "absolute path to the kubeconfig file")
 	flag.StringVar(&master, "master", "", "master url")
-	flag.BoolVar(&allNamespaces, "all-namespaces", false, "all namespaces")
-	flag.StringVar(&fieldSelector, "field-selector", "", "field selector")
+	flag.BoolVar(&allNamespaces, "all-namespaces", false, "All namespaces in cluster")
+	flag.StringVar(&fieldSelector, "field-selector", "", "Selector (field query) to filter on, supports '=', '==', and '!='.(e.g. --field-selector key1=value1,key2=value2).")
 	flag.Parse()
 
 	// creates the connection

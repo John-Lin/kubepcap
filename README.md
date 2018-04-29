@@ -40,3 +40,13 @@ Usage of kubepcap:
   -vmodule value
         comma-separated list of pattern=N settings for file-filtered logging
 ```
+
+## Example 
+
+```shell
+$ kubepcap --all-namespaces --field-selector=status.phase!=Running
+
+$ kubepcap --field-selector=spec.nodeName==docker-for-desktop
+
+$ kubepcap --field-selector=metadata.name==ubuntu
+```
