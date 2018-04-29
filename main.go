@@ -181,11 +181,7 @@ func main() {
 	if allNamespaces {
 		ns = v1.NamespaceAll
 	} else {
-		if len(namespace) != 0 {
-			ns = namespace
-		} else {
-			ns = v1.NamespaceDefault
-		}
+		ns = namespace
 	}
 
 	// create the pod watcher
